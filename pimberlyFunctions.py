@@ -73,7 +73,6 @@ def set_product_endpoint(page_count, since_id, api, env, date_updated):
 def get_products(token='', api='', env='Production', since_id='', date_updated='', log=False):
     """ Initialise process variables"""
     page_count = 1
-    token = 'zlP8g5GsCbbYXuqY1ZYYLHyYHMyO4uVdk2khbaeL5WwWcurSrzATaqZ1TtHN4Slt'
     header = {'Authorization': token}
     df4 = None
 
