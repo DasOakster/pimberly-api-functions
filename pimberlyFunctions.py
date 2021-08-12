@@ -3,7 +3,7 @@ import re
 import pandas as pd
 from datetime import datetime
 
-"""Utility Functions"""
+"""This module """
 
 
 def process_header(message_string):
@@ -34,7 +34,9 @@ def process_message(message_string):
 
 
 def set_product_endpoint(page_count, since_id, api, env, date_updated):
-    """Build the endpoint based on environment, page number and date filter"""
+    """Build the endpoint based on environment, page number and date filter ="""
+    url = ''
+
     # Channel endpoints
     if env == "Sandbox" and api == "Channel":
         url = "https://sandbox.pimber.ly/api/v2.2/products" + since_id
