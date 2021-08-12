@@ -3,28 +3,28 @@ import re
 import pandas as pd
 from datetime import datetime
 
-"""This module """
+""" This module contains functions that use the Pimberly API  to download and upload product data
+
+
+"""
 
 
 def process_header(message_string):
-    """
-    Takes a string and prints a formatted message to the console to provide a log file in Cron"""
+    """Take a string and print a formatted message to the console to provide a log file in Cron"""
     print("-" * 125)
     print(message_string)
     print("-" * 125 + "\n")
 
 
 def process_sub_header(message_string):
-    """
-    Takes a string and prints a formatted message to the console to provide a log file in Cron"""
+    """Take a string and print a formatted message to the console to provide a log file in Cron"""
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     print("-" * 8 + ">  " + message_string + " " * (106 - len(message_string)) + current_time)
 
 
 def process_message(message_string):
-    """
-    Takes a string and prints a formatted message to the console to provide a log file in Cron"""
+    """Take a string and print a formatted message to the console to provide a log file in Cron"""
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     print(" " * 8 + "   Message:" + message_string + " " * (98 - len(message_string)) + current_time)
@@ -73,7 +73,10 @@ def set_product_endpoint(page_count, since_id, api, env, date_updated):
 
 
 def get_products(token='', api='', env='Production', since_id='', date_updated='', log=False):
-    """ Initialise process variables"""
+    """Download product data from either the Channel or Product API
+
+
+    """
     page_count = 1
     header = {'Authorization': token}
     df4 = None
