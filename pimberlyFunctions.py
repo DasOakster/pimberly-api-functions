@@ -4,8 +4,6 @@ import pandas as pd
 from datetime import datetime
 
 """ This module contains functions that use the Pimberly API  to download and upload product data
-
-
 """
 
 
@@ -112,7 +110,7 @@ def get_products(token='', api='', env='Production', since_id='', date_updated='
 
 if __name__ == '__main__':
     process_header('Getting Products')
-    df1_1 = get_products(token='', api='Product', env='Production', since_id='', date_updated='', log=True)
+    df1 = get_products(token='', api='Product', env='Production', since_id='', date_updated='', log=True)
     # print(set_product_endpoint(1, "?sinceId=''", 'Channel', 'Sandbox', ''))
     # print(set_product_endpoint(1, "?sinceId=''", 'Channel', 'Production', ''))
     # print(set_product_endpoint(10, "?sinceId=123456789", 'Channel', 'Sandbox', ''))
