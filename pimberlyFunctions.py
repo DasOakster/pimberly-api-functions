@@ -71,14 +71,14 @@ def set_product_endpoint(page_count, since_id, api, env, date_updated):
 
 
 def get_products(token='', api='', env='Production', since_id='', date_updated='', log=False):
-    """Download product data from either the Channel or Product API
+    """Download product data from either the Channel or Product API"""
 
-
-    """
+    # Initialise function variables
     page_count = 1
     header = {'Authorization': token}
-    df4 = None
+    dfs = []
 
+    # Download product data until call returns 404
     if date_updated:
         process_message("Downloading all Pimberly products updated since " + date_updated)
     elif api == 'Channel':
@@ -96,13 +96,12 @@ def get_products(token='', api='', env='Production', since_id='', date_updated='
         if payload.status_code == 200:
             since_id = '?sinceId=' + payload.json().get('maxId')
             df1 = payload.json().get('data')
-            df2 = pd.json_normalize(df1)
+            df2 = pd.json_normalize(df1)  # unpack nested dictionaries i.e. list attributes
             df3 = pd.melt(df2, id_vars='primaryId')
-            if df4 is None:
-                df4 = df3
-            else:
-                df4 = df3.append(df4)
+            df3['primaryId'] = df3.primaryId.astype(str)  # ensure primaryId is always a string
+            dfs.append(df3)
         else:
+            df4 = pd.concat(dfs)
             return df4
 
         page_count += 1
