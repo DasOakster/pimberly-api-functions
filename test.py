@@ -14,4 +14,4 @@ crd = read_json('config.json')
 
 items = ['894096938XLG', 813037900076]
 
-df1 = pim.get_parent_products(token=crd.get('token'), env=crd.get('env'), child_id=items, log=True)
+df1 = pim.get_parent_products(token=crd.get('token'), env=crd.get('env'), child_id=items, id_only=True, log=True)
