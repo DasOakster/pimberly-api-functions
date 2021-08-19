@@ -1,6 +1,7 @@
 import requests
 import re
 import pandas as pd
+import urllib.parse
 from datetime import datetime
 
 """ This module contains functions that use the Pimberly API  to download and upload product data
@@ -70,13 +71,13 @@ def set_product_endpoint(page_count, since_id, api, env, date_updated):
     return url
 
 
-def get_products(token='', api='', env='Production', since_id='', date_updated='', log=False):
+def get_products(token, api, env, dfs=None, page_count=1, since_id='', date_updated='', log=False):
     """Download product data from either the Channel or Product API"""
 
     # Initialise function variables
-    page_count = 1
+    if dfs is None:
+        dfs = []
     header = {'Authorization': token}
-    dfs = []
 
     # Download product data until call returns 404
     if date_updated:
@@ -100,16 +101,76 @@ def get_products(token='', api='', env='Production', since_id='', date_updated='
             df3 = pd.melt(df2, id_vars='primaryId')
             df3['primaryId'] = df3.primaryId.astype(str)  # ensure primaryId is always a string
             dfs.append(df3)
-        else:
+        elif payload.status_code == 404:  # api call returns 404 i.e. end of product list
+            process_message('Creating dataframe')
             df4 = pd.concat(dfs)
             return df4
+        else:  # if api call returns 503 or other error
+            process_message('API error...retrying')
+            get_products(token, api, env, dfs, page_count, since_id, date_updated, log)
 
         page_count += 1
 
 
+def get_parent_products(token, env, child_id, dfs=None, id_only=True, log=False):
+    """Take a list of child products and return their parent data into a dataframe"""
+
+    # Initialise the function variables
+    primary_id = "primaryId"
+    prod_endpoint = "https://pimber.ly/api/v2.2/products/"
+    sb_endpoint = "https://sandbox.pimber.ly/api/v2.2/products/"
+    extend_response = "/parents?extendResponse=1&attributes=*"
+    parent = "/parents"
+    if dfs is None:
+        dfs = []
+    header = {'Authorization': token}
+
+    # Create the endpoint
+    if env == "Production" and not id_only:
+        base_url = prod_endpoint + primary_id + extend_response
+    elif env == "Sandbox" and not id_only:
+        base_url = sb_endpoint + primary_id + extend_response
+    elif env == "Production" and id_only:
+        base_url = prod_endpoint + primary_id + parent
+    elif env == "Sandbox" and id_only:
+        base_url = sb_endpoint + primary_id + parent
+
+    # Ensure all item ids are properly url encoded strings
+    child_id = [str(i) for i in child_id]
+    child_id = [urllib.parse.quote(i, safe='') for i in child_id]
+
+    # Iterate through the items retaining the loop counter in case of error and need to restart
+    for c, i in enumerate(child_id):
+
+        url = re.sub("primaryId", i, base_url)
+        payload = requests.get(url, headers=header)
+
+        if payload.status_code == 200:
+            df1 = payload.json().get('data')
+            df2 = pd.json_normalize(df1)  # unpack nested dictionaries i.e. list attributes
+            df3 = pd.melt(df2, id_vars='primaryId')
+            df3['primaryId'] = df3.primaryId.astype(str)  # ensure primaryId is always a string
+            df3['itemId'] = urllib.parse.unquote(i)
+            dfs.append(df3)
+        else:  # if api call returns 503 or other error
+            process_message('API error...retrying')
+            child_id = child_id[c:]
+            child_id = [urllib.parse.unquote(i) for i in child_id]
+            get_parent_products(token, env, child_id, dfs, id_only, log)
+
+        # Output an optional status message to the console
+        if log:
+            process_message(i + " of " + str(len(child_id)) + " | "
+                            + primary_id + " | Status: " + str(payload.status_code))
+
+    process_message('Creating dataframe')
+    df4 = pd.concat(dfs)
+    return df4
+
+
 if __name__ == '__main__':
     process_header('Getting Products')
-    df1 = get_products(token='', api='Product', env='Production', since_id='', date_updated='', log=True)
+    df = get_products(token='', api='Product', env='Production', since_id='', date_updated='', log=True)
     # print(set_product_endpoint(1, "?sinceId=''", 'Channel', 'Sandbox', ''))
     # print(set_product_endpoint(1, "?sinceId=''", 'Channel', 'Production', ''))
     # print(set_product_endpoint(10, "?sinceId=123456789", 'Channel', 'Sandbox', ''))
